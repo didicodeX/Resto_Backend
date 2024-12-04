@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test API RESTful</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, button {
+      margin-bottom: 10px;
+      padding: 8px;
+      width: 100%;
+      max-width: 400px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test de l'API RESTful</h1>
+
+  <!-- Formulaire pour ajouter un plat -->
+  <form id="add-form">
+    <h2>Ajouter un plat</h2>
+    <label for="name">Nom du plat</label>
+    <input type="text" id="name" required>
+    <label for="description">Description</label>
+    <input type="text" id="description" required>
+    <label for="price">Prix</label>
+    <input type="number" id="price" required>
+    <label for="category">Catégorie</label>
+    <input type="text" id="category" required>
+    <label for="image_url">URL de l'image</label>
+    <input type="text" id="image_url" required>
+    <button type="submit">Ajouter le plat</button>
+  </form>
+
+  <!-- Liste des plats -->
+  <h2>Menu</h2>
+  <table id="menu-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nom</th>
+        <th>Description</th>
+        <th>Prix</th>
+        <th>Catégorie</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Les plats seront ajoutés ici dynamiquement -->
+    </tbody>
+  </table>
+
+  <script>
+    const API_URL = 'http://localhost:3000/menu'; // Assurez-vous que votre backend fonctionne sur ce port.
+
+    // Fonction pour récupérer le menu
+    async function fetchMenu() {
+      try {
+        const response = await fetch(API_URL);
+        const menu = await response.json();
+        displayMenu(menu);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du menu :', error);
+      }
+    }
+
+    // Fonction pour afficher le menu dans le tableau
+    function displayMenu(menu) {
+      const tableBody = document.querySelector('#menu-table tbody');
+      tableBody.innerHTML = ''; // Vide le tableau avant de le remplir
+
+      menu.forEach(plat => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${plat.id}</td>
+          <td>${plat.name}</td>
+          <td>${plat.description}</td>
+          <td>${plat.price} €</td>
+          <td>${plat.category}</td>
+          <td>
+            <button onclick="deletePlat(${plat.id})">Supprimer</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Fonction pour ajouter un plat
+    document.getElementById('add-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const description = document.getElementById('description').value;
+      const price = document.getElementById('price').value;
+      const category = document.getElementById('category').value;
+      const image_url = document.getElementById('image_url').value;
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description, price, category, image_url })
+        });
+        if (response.ok) {
+          alert('Plat ajouté avec succès');
+          fetchMenu(); // Actualise la liste
+          e.target.reset(); // Réinitialise le formulaire
+        } else {
+          alert('Erreur lors de l\'ajout du plat');
+        }
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout du plat :', error);
+      }
+    });
+
+    // Fonction pour supprimer un plat
+    async function deletePlat(id) {
+      try {
+        const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+          alert('Plat supprimé avec succès');
+          fetchMenu(); // Actualise la liste
+        } else {
+          alert('Erreur lors de la suppression du plat');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la suppression du plat :', error);
+      }
+    }
+
+    // Charger le menu au démarrage
+    fetchMenu();
+  </script>
+</body>
+</html>

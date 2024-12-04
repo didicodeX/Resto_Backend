@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu RESTO</title>
+  <style>
+    /* Styles globaux */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+
+    header {
+      background-color: #ff6347;
+      color: #fff;
+      padding: 20px 10px;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+
+    .menu-item img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .menu-item div {
+      flex: 1;
+      margin-left: 10px;
+    }
+
+    .menu-item div h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .menu-item div p {
+      margin: 5px 0 0;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .menu-item .price {
+      font-weight: bold;
+      color: #ff6347;
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background-color: #ff6347;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #e5533e;
+    }
+
+    form {
+      margin-top: 20px;
+    }
+
+    input, textarea {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    textarea {
+      resize: none;
+    }
+  </style>
+</head>
+<body>
+  <header>Bienvenue sur le menu RESTO 🍽️</header>
+  <div class="container">
+    <h1>Liste des plats</h1>
+    <div id="menu"></div>
+
+    <form id="addForm">
+      <h2>Ajouter un plat</h2>
+      <input type="text" id="name" placeholder="Nom du plat" required />
+      <textarea id="description" rows="3" placeholder="Description"></textarea>
+      <input type="number" id="price" placeholder="Prix" required />
+      <input type="text" id="category" placeholder="Catégorie" required />
+      <!-- <input type="file" name="image" accept="image/*" required /> -->
+      <input type="url" id="image_url" placeholder="URL de l'image" required />
+      <button type="submit">Ajouter un plat</button>
+    </form>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/menu';
+    const menuContainer = document.getElementById('menu');
+    const addForm = document.getElementById('addForm');
+
+    // Récupérer et afficher les plats
+    async function fetchMenu() {
+      menuContainer.innerHTML = '<p>Chargement...</p>';
+      try {
+        const response = await fetch(API_URL);
+        const menu = await response.json();
+        menuContainer.innerHTML = menu.map(item => `
+          <div class="menu-item">
+            <img src="${item.image_url}" alt="${item.name}" />
+            <div>
+              <h3>${item.name}</h3>
+              <p>${item.description}</p>
+              <p class="price">${item.price} €</p>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        menuContainer.innerHTML = '<p>Erreur lors de la récupération du menu</p>';
+        console.error(err);
+      }
+    }
+
+    // Ajouter un plat
+    addForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newDish = {
+        name: document.getElementById('name').value,
+        description: document.getElementById('description').value,
+        price: document.getElementById('price').value,
+        category: document.getElementById('category').value,
+        image_url: document.getElementById('image_url').value,
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newDish),
+        });
+
+        if (response.ok) {
+          alert('Plat ajouté avec succès');
+          fetchMenu(); // Rafraîchir le menu
+          addForm.reset(); // Réinitialiser le formulaire
+        } else {
+          alert('Erreur lors de l\'ajout du plat');
+        }
+      } catch (err) {
+        console.error('Erreur lors de l\'ajout du plat:', err);
+      }
+    });
+
+    // Charger le menu au démarrage
+    fetchMenu();
+  </script>
+</body>
+</html>
